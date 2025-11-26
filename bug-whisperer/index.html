@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Whisperer AI Agent (4 Modes)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #3b82f6;
+            --bg-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+        }
+
+        .agent-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-animation {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-gray-900 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                Bug Whisperer AI - Four Agents
+            </h1>
+            <p class="text-gray-500 mt-2">Specialized agents for Quality, Learning, Refactoring, and Documentation.</p>
+        </header>
+
+        <!-- Agent Mode Selection and Input -->
+        <div class="bg-white p-6 rounded-xl agent-card mb-6">
+            <div class="mb-4">
+                <label for="agentMode" class="block text-sm font-medium text-gray-700 mb-2">Select Agent Mode</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button id="qaModeBtn" type="button" data-mode="qa" class="mode-btn py-2 px-3 rounded-lg border border-transparent bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm">
+                        QA Engineer
+                    </button>
+                    <button id="learnModeBtn" type="button" data-mode="learn" class="mode-btn py-2 px-3 rounded-lg border border-indigo-200 text-indigo-700 font-semibold bg-indigo-50 shadow-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm">
+                        Learning Navigator
+                    </button>
+                    <button id="refactorModeBtn" type="button" data-mode="refactor" class="mode-btn py-2 px-3 rounded-lg border border-indigo-200 text-indigo-700 font-semibold bg-indigo-50 shadow-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm">
+                        Refactoring Guru
+                    </button>
+                    <button id="docModeBtn" type="button" data-mode="doc" class="mode-btn py-2 px-3 rounded-lg border border-indigo-200 text-indigo-700 font-semibold bg-indigo-50 shadow-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out text-sm">
+                        Documentation Writer
+                    </button>
+                </div>
+            </div>
+
+            <div id="modeDescription" class="mb-4 p-3 text-sm rounded-lg text-indigo-800 bg-indigo-50 border border-indigo-200">
+                <!-- Description will be inserted here -->
+            </div>
+
+            <div class="mb-4">
+                <label for="queryInput" class="block text-sm font-medium text-gray-700 mb-2">Enter your query (Code snippet, Topic to learn, or Process to document)</label>
+                <textarea id="queryInput" rows="5" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-150" placeholder="e.g., 'Fix the bug in this Python function: def sum_list(l): s=0; for i in l: s += i; return s' OR 'Create a learning path for TypeScript.' OR 'Refactor this simple bubble sort implementation'"></textarea>
+            </div>
+
+            <button id="submitBtn" type="button" class="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-lg text-lg font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out" disabled>
+                <span id="buttonText">Analyze/Navigate</span>
+                <div id="loadingIndicator" class="loading-animation ml-3 hidden"></div>
+            </button>
+        </div>
+
+        <!-- Agent Response Area -->
+        <div class="bg-white p-6 rounded-xl agent-card">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">Agent Response</h2>
+            <div id="responseContainer" class="min-h-32 text-gray-700 whitespace-pre-wrap">
+                <p class="text-center text-gray-400 p-6">Select an agent mode and enter a query to begin the analysis.</p>
+            </div>
+            
+            <div id="citationContainer" class="mt-4 pt-4 border-t border-gray-200 hidden">
+                <p class="text-sm font-medium text-gray-700 mb-2">Sources (Grounding Metadata):</p>
+                <ul id="citationList" class="list-disc list-inside text-sm text-indigo-600 space-y-1"></ul>
+            </div>
+            
+            <div id="errorContainer" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg hidden">
+                An error occurred. Please check the console for details.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Agent System Prompts ---
+        const AGENTS = {
+            qa: {
+                name: "QA Engineer (Bug Whisperer)",
+                buttonText: "Analyze Code",
+                description: "Focuses on identifying bugs, suggesting fixes, and generating comprehensive test cases for code or scenarios.",
+                systemPrompt: `You are the 'Bug Whisperer', a world-class Senior QA Engineer and software architect.
+                Your primary goal is to analyze code snippets or technical scenarios provided by the user. 
+                You must provide structured feedback in the following three parts:
+                
+                1.  **Vulnerability & Bug Analysis:** Identify any potential runtime errors, security vulnerabilities (e.g., injection, XSS), or logic bugs. Explain *why* it's a bug.
+                2.  **Suggested Fixes & Improvements:** Provide the clean, fixed code or a clear description of the architectural change needed to resolve the issues and improve defensive programming.
+                3.  **Comprehensive Test Cases:** Generate a set of comprehensive, high-priority test cases (inputs and expected outputs) to validate the fix and cover edge cases (e.g., zero, null, maximum limits, maximum limits, concurrency).
+                
+                Maintain a professional, analytical, and highly detailed tone. Your response must be actionable.`,
+                useGrounding: false
+            },
+            learn: {
+                name: "Learning Navigator",
+                buttonText: "Generate Roadmap",
+                description: "Takes a complex technical topic and creates a highly structured, step-by-step 4-part learning roadmap.",
+                systemPrompt: `You are the 'Learning Navigator', an expert educational tutor and curriculum designer.
+                Your task is to take a single, complex technical topic requested by the user and 
+                create a highly structured, 4-step learning roadmap. 
+                
+                The output must strictly follow this format, using markdown headings:
+                
+                ## Learning Roadmap: [Topic Title]
+                
+                ### 1. Prerequisites (What you must know first)
+                [List 2-4 key concepts required to start.]
+                
+                ### 2. Core Concepts (The fundamentals)
+                [Explain the core mechanisms, definitions, and key vocabulary.]
+                
+                ### 3. Practical Application (Hands-on experience)
+                [Suggest a small project or exercise the user can complete to apply the knowledge.]
+                
+                ### 4. Advanced Topics & Next Steps (Where to go next)
+                [List 2-3 advanced, related topics and potential career applications.]
+                
+                Your tone should be encouraging, clear, and highly structured.`,
+                useGrounding: true
+            },
+            refactor: {
+                name: "Refactoring Guru",
+                buttonText: "Refactor Code",
+                description: "Analyzes code for quality, performance, and design patterns, providing idiomatic, refactored solutions.",
+                systemPrompt: `You are the 'Refactoring Guru', a meticulous Senior Software Engineer specializing in code quality, 
+                performance optimization, and design patterns.
+                
+                Your goal is to analyze the user's provided code snippet and suggest structural refactoring improvements.
+                Your response must be structured into three parts:
+                
+                1.  **Refactoring Rationale:** Explain the current issues (e.g., high cyclomatic complexity, poor naming, non-idiomatic usage, performance bottlenecks).
+                2.  **Refactored Code:** Provide the complete, clean, and idiomatic refactored code block. Use comments to highlight the specific changes made.
+                3.  **Pattern/Principle:** Identify which core programming principles (e.g., DRY, SOLID, YAGNI) or design patterns (e.g., Factory, Strategy, Observer) were applied or violated, and explain how the refactoring aligns with them.
+                
+                Maintain a crisp, objective, and technical tone.`,
+                useGrounding: false
+            },
+            doc: {
+                name: "Documentation Writer",
+                buttonText: "Generate Docs",
+                description: "Generates clear, comprehensive, and professionally formatted documentation for code, APIs, or processes.",
+                systemPrompt: `You are the 'Documentation Writer', an expert Technical Writer who creates clear,
+                user-friendly, and comprehensive documentation. Your focus is on clarity,
+                accuracy, and proper formatting.
+                
+                The user will provide a code snippet, an API endpoint description, or a process outline.
+                Your output MUST be a complete, professional documentation artifact in Markdown format.
+                
+                Choose the most appropriate format based on the input:
+                - If code: Generate detailed inline documentation (like JSDoc or Python Docstrings) and a high-level summary of the function/class.
+                - If API/Process: Generate a structured guide including a 'Purpose' section, 'Usage/Example' section, and a 'Parameters/Inputs' table.
+                
+                Ensure all formatting (headings, code blocks, lists) is flawless and concise.`,
+                useGrounding: true
+            }
+        };
+
+        // --- DOM Elements ---
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const modeDescription = document.getElementById('modeDescription');
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const buttonText = document.getElementById('buttonText');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const responseContainer = document.getElementById('responseContainer');
+        const citationContainer = document.getElementById('citationContainer');
+        const citationList = document.getElementById('citationList');
+        const errorContainer = document.getElementById('errorContainer');
+        
+        let currentMode = null;
+
+        // --- API Configuration ---
+        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`;
+        // IMPORTANT: Leave API_KEY as an empty string. The Canvas runtime 
+        // will automatically inject the necessary key for secure operation.
+        const API_KEY = "AIzaSyAYXG0TszVDSk28_3Sg3lJjoUFFfGCTfyc"; 
+
+        /**
+         * Selects the active agent mode and updates the UI.
+         * @param {string} mode - 'qa', 'learn', 'refactor', or 'doc'.
+         */
+        function selectMode(mode) {
+            currentMode = mode;
+            const agent = AGENTS[mode];
+            
+            modeButtons.forEach(btn => {
+                const isSelected = btn.dataset.mode === mode;
+                btn.classList.toggle('bg-indigo-600', isSelected);
+                btn.classList.toggle('text-white', isSelected);
+                btn.classList.toggle('border-transparent', isSelected);
+                btn.classList.toggle('bg-indigo-50', !isSelected);
+                btn.classList.toggle('text-indigo-700', !isSelected);
+                btn.classList.toggle('border-indigo-200', !isSelected);
+            });
+
+            // Update description and button text
+            modeDescription.innerHTML = `**Mode Selected:** ${agent.name} - ${agent.description}`;
+            buttonText.textContent = agent.buttonText;
+            
+            // Enable submit button if query is not empty
+            submitBtn.disabled = queryInput.value.trim() === "";
+        }
+
+        /**
+         * Fetches content from the Gemini API with exponential backoff.
+         * @param {object} payload - The API request payload.
+         * @param {number} retries - Number of remaining retries.
+         */
+        async function fetchWithBackoff(payload, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const url = `${API_URL}?key=${API_KEY}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429 && i < retries - 1) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue; // Retry the loop
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return response.json();
+
+                } catch (error) {
+                    if (i === retries - 1) {
+                        console.error("API call failed after all retries.", error);
+                        throw error;
+                    }
+                    const delay = Math.pow(2, i) * 1000; 
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+
+        /**
+         * Main function to handle the submission and API call.
+         */
+        async function handleSubmit() {
+            if (!currentMode || submitBtn.disabled) return;
+
+            const userQuery = queryInput.value.trim();
+            if (!userQuery) {
+                errorContainer.textContent = "Please enter a query before submitting.";
+                errorContainer.classList.remove('hidden');
+                return;
+            }
+
+            const agentConfig = AGENTS[currentMode];
+            
+            // 1. Prepare UI for loading
+            responseContainer.innerHTML = '';
+            citationContainer.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+            submitBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            buttonText.textContent = 'Generating...';
+
+            // 2. Construct the Payload
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: agentConfig.systemPrompt }] },
+            };
+            
+            if (agentConfig.useGrounding) {
+                payload.tools = [{ "google_search": {} }];
+            }
+
+            try {
+                // 3. Make the API call
+                const result = await fetchWithBackoff(payload);
+
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    // 4. Extract generated text
+                    const generatedText = candidate.content.parts[0].text;
+                    
+                    // Display text (formatted for markdown using a simple trick for pre-wrap)
+                    // Note: If you want true markdown rendering, you would use a library here.
+                    responseContainer.innerHTML = `<pre class="whitespace-pre-wrap font-sans">${generatedText}</pre>`;
+                    
+                    // 5. Extract grounding sources
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    
+                    citationList.innerHTML = '';
+
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+                    
+                    if (sources.length > 0) {
+                        sources.forEach(source => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<a href="${source.uri}" target="_blank" class="hover:underline">${source.title || 'Untitled Source'}</a>`;
+                            citationList.appendChild(li);
+                        });
+                        citationContainer.classList.remove('hidden');
+                    }
+                    
+                } else {
+                    responseContainer.textContent = "Agent returned an empty or malformed response.";
+                    errorContainer.textContent = "Agent response structure was invalid.";
+                    errorContainer.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Agent execution failed:", error);
+                errorContainer.textContent = `Error: ${error.message}. Please try again.`;
+                errorContainer.classList.remove('hidden');
+                responseContainer.innerHTML = `<p class="text-red-500">Failed to connect to the agent. Check console for details.</p>`;
+            } finally {
+                // 6. Restore UI state
+                loadingIndicator.classList.add('hidden');
+                buttonText.textContent = AGENTS[currentMode].buttonText;
+                submitBtn.disabled = queryInput.value.trim() === "";
+            }
+        }
+
+        // --- Event Listeners ---
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => selectMode(btn.dataset.mode));
+        });
+
+        submitBtn.addEventListener('click', handleSubmit);
+
+        queryInput.addEventListener('input', () => {
+            submitBtn.disabled = currentMode === null || queryInput.value.trim() === "";
+        });
+
+        // Initialize with QA mode selected by default
+        selectMode('qa');
+    </script>
+</body>
+</html>
